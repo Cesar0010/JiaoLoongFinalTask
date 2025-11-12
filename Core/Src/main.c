@@ -57,7 +57,10 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint8_t rx_data[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-uint8_t tx_data[8] = {0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+uint8_t tx_data[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+float target_angle = 0;
+float feedforward[61];
+int ttt;
 uint32_t can_tx_mail_box_;
 CAN_RxHeaderTypeDef rx_header;
 CAN_TxHeaderTypeDef tx_header = {
@@ -118,6 +121,25 @@ int main(void)
   HAL_CAN_Start(&hcan1);
   HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
   HAL_TIM_Base_Start_IT(&htim6);
+  for (int j = 0; j < 5; j++)
+  {
+    for (int i = 0; i < 61; i++)
+    {
+      target_angle = i;
+      HAL_Delay(3000);
+      feedforward[i] += ttt;
+    }
+    for (int i = 60; i >=0; i--)
+    {
+      target_angle = i;
+      HAL_Delay(100);
+    }
+    HAL_Delay(5000);
+  }
+  for (int i=0;i<61;i++)
+  {
+    feedforward[i] /= 5;
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
