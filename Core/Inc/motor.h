@@ -3,6 +3,7 @@
 class Motor
 {
     private:
+    int16_t can_id_;
     const float ratio_;
     float angle_;
     float delta_angle_;
@@ -27,9 +28,9 @@ public:
     void SetSpeed(float target_speed, float feedforward_intensity);
     void SetIntensity(float intensity);
     float FeedforwardIntensityCalc();
-    Motor(const float ratio, float p_kp, float p_ki, float p_kd, float s_kp, float s_ki, float s_kd,
+    Motor(const float ratio,int16_t can_id, float p_kp, float p_ki, float p_kd, float s_kp, float s_ki, float s_kd,
     float p_imax, float s_imax, float p_out_max, float s_out_max, float p_d_filter_k, float s_d_filter_k)
-    : ratio_(ratio),
+    : ratio_(ratio),can_id_(can_id),
       spid_(s_kp, s_ki, s_kd, s_imax, s_out_max, s_d_filter_k),
       ppid_(p_kp, p_ki, p_kd, p_imax, p_out_max, p_d_filter_k)
     {

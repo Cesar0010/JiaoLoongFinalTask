@@ -5,7 +5,6 @@
 
 #include <cmath>
 extern uint8_t tx_data[8];
-extern int ttt;
 float linearMapping(float input, float input_min, float input_max, float output_min, float output_max)
 {
     return (input - input_min) * (output_max - output_min) / (input_max - input_min) + output_min;
@@ -28,7 +27,6 @@ void Motor::canRxMsgCallback(const uint8_t rx_data[8])
     rotate_speed_ = static_cast<float>(speed_raw);
     int16_t current_raw = (rx_data[4] << 8) | rx_data[5];
     current_raw = static_cast<float>(current_raw);
-    ttt = current_raw;
     current_ =linearMapping(current_raw, -16384.0, 16384.0, -3, 3);
     temp_ = rx_data[6];
     if (init_flag_ == true)
@@ -88,7 +86,7 @@ void Motor::handle()
 
 float Motor::FeedforwardIntensityCalc()
 {
-    feedforward_intensity_ = 0.5*9.8*sin(angle_/180*3.14159265358979323846)*0.05524/0.3*16384/20;
+    feedforward_intensity_ = 0.172f * pow(angle_, 3.0) - 18.4f * pow(angle_, 2.0) + 517.0f * angle_ +2747.5f;
     float feedforward_intensity = feedforward_intensity_;
     return feedforward_intensity;
 }
@@ -96,8 +94,33 @@ float Motor::FeedforwardIntensityCalc()
 void Motor::output()
 {
     int intensity = static_cast<int>(output_intensity_);
-    tx_data[6] = (intensity >> 8) & 0xFF;
-    tx_data[7] = intensity & 0xFF;
+    switch (can_id_)
+    {
+        case 0x205:
+            {
+                tx_data[0] = (intensity >> 8) & 0xFF;
+                tx_data[1] = intensity & 0xFF;
+                break;
+            }
+        case 0x206:
+            {
+                tx_data[2] = (intensity >> 8) & 0xFF;
+                tx_data[3] = intensity & 0xFF;
+                break;
+            }
+        case 0x207:
+            {
+                tx_data[4] = (intensity >> 8) & 0xFF;
+                tx_data[5] = intensity & 0xFF;
+                break;
+            }
+        case 0x208:
+            {
+                tx_data[6] = (intensity >> 8) & 0xFF;
+                tx_data[7] = intensity & 0xFF;
+                break;
+            }
+    }
 }
 
 

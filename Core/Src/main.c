@@ -18,10 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "can.h"
-#include "tim.h"
 #include "gpio.h"
-
+#include "user_tasks.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -50,6 +50,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -58,9 +59,9 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 uint8_t rx_data[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 uint8_t tx_data[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-float target_angle = 0;
-float feedforward[61];
-int ttt;
+float target_angle_pitch = 0;
+float target_angle_yaw = 0;
+
 uint32_t can_tx_mail_box_;
 CAN_RxHeaderTypeDef rx_header;
 CAN_TxHeaderTypeDef tx_header = {
@@ -115,32 +116,21 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CAN1_Init();
-  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   HAL_CAN_ConfigFilter(&hcan1, &filter_config);
   HAL_CAN_Start(&hcan1);
   HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
-  HAL_TIM_Base_Start_IT(&htim6);
-  for (int j = 0; j < 5; j++)
-  {
-    for (int i = 0; i < 61; i++)
-    {
-      target_angle = i;
-      HAL_Delay(3000);
-      feedforward[i] += ttt;
-    }
-    for (int i = 60; i >=0; i--)
-    {
-      target_angle = i;
-      HAL_Delay(100);
-    }
-    HAL_Delay(5000);
-  }
-  for (int i=0;i<61;i++)
-  {
-    feedforward[i] /= 5;
-  }
+  user_tasks_init();
   /* USER CODE END 2 */
+
+  /* Init scheduler */
+  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
+  MX_FREERTOS_Init();
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -201,6 +191,28 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM7 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM7)
+  {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
