@@ -20,7 +20,9 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "can.h"
+#include "dma.h"
 #include "spi.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -63,6 +65,7 @@ uint8_t rx_data[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 uint8_t tx_data[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 float target_angle_pitch = 0;
 float target_angle_yaw = 0;
+uint8_t rx_buffer[18];
 
 uint32_t can_tx_mail_box_;
 CAN_RxHeaderTypeDef rx_header;
@@ -117,14 +120,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_CAN1_Init();
   MX_SPI1_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_CAN_ConfigFilter(&hcan1, &filter_config);
   HAL_CAN_Start(&hcan1);
   HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
   user_tasks_init();
   bmi088_init();
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart3,rx_buffer, 18);
   /* USER CODE END 2 */
 
   /* Init scheduler */
