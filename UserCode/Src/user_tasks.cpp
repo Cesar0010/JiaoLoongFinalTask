@@ -98,17 +98,17 @@ constexpr osThreadAttr_t Stop_motor_task_attributes = {
 {
     while (1)
     {
-        osEventFlagsWait(event_handle, flag_4, osFlagsWaitAny, osWaitForever);
+        osEventFlagsWait(event_handle, flag_4|flag_3, osFlagsWaitAny, osWaitForever);
         float feedforward_intensity =motor_pitch.FeedforwardIntensityCalc();
         motor_pitch.SetPosition(target_angle_pitch,0.0f,feedforward_intensity);
         //motor_pitch.SetSpeed(0,feedforward_intensity);
         motor_pitch.handle();
         motor_pitch.output();
 
-        //motor_yaw.SetPosition(target_angle_yaw,0.0f,0.0f);
-        motor_yaw.SetSpeed(0,0);
+        motor_yaw.SetPosition(target_angle_yaw,0.0f,0.0f);
+        //motor_yaw.SetSpeed(0,0);
         motor_yaw.handle();
-        //motor_yaw.output();
+        motor_yaw.output();
         osEventFlagsClear(event_handle, flag_3);
         osEventFlagsSet(event_handle, flag_5);
         osEventFlagsClear(event_handle, flag_4);
@@ -119,7 +119,7 @@ constexpr osThreadAttr_t Stop_motor_task_attributes = {
 {
     while (1)
     {
-        osEventFlagsWait(event_handle, flag_5, osFlagsWaitAll, osWaitForever);
+        osEventFlagsWait(event_handle, flag_5|flag_2, osFlagsWaitAll, osWaitForever);
         HAL_CAN_AddTxMessage(&hcan1, &tx_header, tx_data, &can_tx_mail_box_);
         osEventFlagsClear(event_handle, flag_5);
     }
@@ -150,8 +150,8 @@ constexpr osThreadAttr_t Stop_motor_task_attributes = {
             osEventFlagsSet(event_handle, flag_1);
             osEventFlagsClear(event_handle, flag_2);
         }
-        //target_angle_pitch = rcc.read_remote.channel_1 * 180;
-        //target_angle_yaw = rcc.read_remote.channel_0 * 180;
+        target_angle_pitch = rcc.read_remote.channel_1 * 25 + 30;
+        target_angle_yaw = rcc.read_remote.channel_0 * 90;
         osEventFlagsSet(event_handle, flag_3);
     }
 }
