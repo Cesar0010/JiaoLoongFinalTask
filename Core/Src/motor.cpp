@@ -9,7 +9,6 @@ float linearMapping(float input, float input_min, float input_max, float output_
 {
     return (input - input_min) * (output_max - output_min) / (input_max - input_min) + output_min;
 }
-int i;
 void Motor::canRxMsgCallback(const uint8_t rx_data[8])
 {
     last_ecd_angle_ = ecd_angle_;
@@ -27,7 +26,6 @@ void Motor::canRxMsgCallback(const uint8_t rx_data[8])
     rotate_speed_ = static_cast<float>(speed_raw);
     int16_t current_raw = (rx_data[4] << 8) | rx_data[5];
     current_raw = static_cast<float>(current_raw);
-    i = current_raw;
     current_ =linearMapping(current_raw, -16384.0, 16384.0, -3, 3);
     temp_ = rx_data[6];
     if (init_flag_ == true)
@@ -87,7 +85,7 @@ void Motor::handle()
 
 float Motor::FeedforwardIntensityCalc()
 {
-    feedforward_intensity_ = 0;
+    feedforward_intensity_ = 0.05066 * pow(fdb_angle_,3) - 5.47786 * pow(fdb_angle_,2) + 140.43512 * fdb_angle_ + 1987.87879;
     return feedforward_intensity_;
 }
 

@@ -17,7 +17,7 @@ extern CAN_RxHeaderTypeDef rx_header;
 extern CAN_TxHeaderTypeDef tx_header;
 extern uint32_t can_tx_mail_box_;
 
-Motor motor_pitch(1,0x208,0,0,0,0,0,0,4000,4000,16384,16384,0.1,0.0);
+Motor motor_pitch(1,0x208,8,0.01,600,49,0,0,4000,4000,16384,16384,0.06,0.0);
 Motor motor_yaw(1,0x205,20,0.001,600,210,0,0,4000,4000,16384,16384,0.07,0.0);
 IMU imu;
 Rcc rcc;
@@ -100,13 +100,13 @@ constexpr osThreadAttr_t Stop_motor_task_attributes = {
     {
         osEventFlagsWait(event_handle, flag_4, osFlagsWaitAny, osWaitForever);
         float feedforward_intensity =motor_pitch.FeedforwardIntensityCalc();
-        //motor_pitch.SetPosition(target_angle_pitch,0.0f,feedforward_intensity);
-        motor_pitch.SetSpeed(0,feedforward_intensity);
+        motor_pitch.SetPosition(target_angle_pitch,0.0f,feedforward_intensity);
+        //motor_pitch.SetSpeed(0,feedforward_intensity);
         motor_pitch.handle();
         motor_pitch.output();
 
-        motor_yaw.SetPosition(target_angle_yaw,0.0f,0.0f);
-        //motor_yaw.SetSpeed(0,0);
+        //motor_yaw.SetPosition(target_angle_yaw,0.0f,0.0f);
+        motor_yaw.SetSpeed(0,0);
         motor_yaw.handle();
         //motor_yaw.output();
         osEventFlagsClear(event_handle, flag_3);
@@ -150,8 +150,8 @@ constexpr osThreadAttr_t Stop_motor_task_attributes = {
             osEventFlagsSet(event_handle, flag_1);
             osEventFlagsClear(event_handle, flag_2);
         }
-        target_angle_pitch = rcc.read_remote.channel_1 * 180;
-        target_angle_yaw = rcc.read_remote.channel_0 * 180;
+        //target_angle_pitch = rcc.read_remote.channel_1 * 180;
+        //target_angle_yaw = rcc.read_remote.channel_0 * 180;
         osEventFlagsSet(event_handle, flag_3);
     }
 }
