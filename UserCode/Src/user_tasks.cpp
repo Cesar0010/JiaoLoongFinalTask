@@ -18,7 +18,7 @@ extern CAN_TxHeaderTypeDef tx_header;
 extern uint32_t can_tx_mail_box_;
 
 Motor motor_pitch(1,0x208,0,0,0,0,0,0,4000,4000,16384,16384,0.1,0.0);
-Motor motor_yaw(1,0x205,0,0,0,210,0,0,4000,4000,16384,16384,0.1,0.0);
+Motor motor_yaw(1,0x205,20,0.001,600,210,0,0,4000,4000,16384,16384,0.07,0.0);
 IMU imu;
 Rcc rcc;
 
@@ -39,7 +39,7 @@ osThreadId_t motor_feedback_decoding_task_handle;
 constexpr osThreadAttr_t motor_feedback_decoding_task_attributes = {
     .name = "motor_feedback_decoding_task",
     .stack_size = 128 * 8,
-    .priority = (osPriorityNormal),
+    .priority = (osPriorityHigh1),
 };
 
 osThreadId_t PID_control_task_handle;
@@ -100,13 +100,15 @@ constexpr osThreadAttr_t Stop_motor_task_attributes = {
     {
         osEventFlagsWait(event_handle, flag_4, osFlagsWaitAny, osWaitForever);
         float feedforward_intensity =motor_pitch.FeedforwardIntensityCalc();
-        motor_pitch.SetPosition(target_angle_pitch,0.0f,feedforward_intensity);
+        //motor_pitch.SetPosition(target_angle_pitch,0.0f,feedforward_intensity);
+        motor_pitch.SetSpeed(0,feedforward_intensity);
         motor_pitch.handle();
-        //motor_pitch.output();
+        motor_pitch.output();
+
         motor_yaw.SetPosition(target_angle_yaw,0.0f,0.0f);
         //motor_yaw.SetSpeed(0,0);
         motor_yaw.handle();
-        motor_yaw.output();
+        //motor_yaw.output();
         osEventFlagsClear(event_handle, flag_3);
         osEventFlagsSet(event_handle, flag_5);
         osEventFlagsClear(event_handle, flag_4);
