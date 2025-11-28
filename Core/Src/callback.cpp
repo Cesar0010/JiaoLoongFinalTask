@@ -1,6 +1,8 @@
 #include "cmsis_os2.h"
 #include "can.h"
+#include "iwdg.h"
 #include "RCC.h"
+#include "tim.h"
 #include "usart.h"
 extern Rcc rcc;
 
@@ -36,5 +38,13 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
             rcc.connected = true;
         }
         osSemaphoreRelease(Rcc_semaphore_handle);
+    }
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim->Instance == htim6.Instance)
+    {
+        HAL_IWDG_Refresh(&hiwdg);
     }
 }
